@@ -9,8 +9,8 @@
 class OneWayLinkedList<T: Equatable> {
     // 元素没有找到
     private let ELEMENT_NOT_FOUND = -1
-    private var first: Node<T>?
-    private var count: Int = 0
+    fileprivate var first: Node<T>?
+    fileprivate var count: Int = 0
     
     init(_ firstEle: T) {
         first = Node(ele: firstEle, next: nil)
@@ -18,7 +18,7 @@ class OneWayLinkedList<T: Equatable> {
     }
     
     // 结点类
-    private class Node<T> {
+    fileprivate class Node<T> {
         var ele: T
         var next: Node<T>?
         init(ele: T, next: Node?) {
@@ -91,8 +91,15 @@ class OneWayLinkedList<T: Equatable> {
     func desc() {
         var node = first
         var str = ""
-        while node != nil {
-            str += "\(node!.ele)"
+        for idx in 0..<count {
+            if idx == 0 {
+                str += "first:\(node!.ele),"
+            }
+            if node!.next != nil {
+                str += " [\(node!.ele), \(node!.next!.ele)]"
+            } else {
+                str += " [\(node!.ele), nil]"
+            }
             node = node!.next
             if node != nil {
                 str += ","
@@ -102,7 +109,7 @@ class OneWayLinkedList<T: Equatable> {
     }
     
     // 获取索引所在的结点
-    private func node(_ index: Int) -> Node<T> {
+    fileprivate func node(_ index: Int) -> Node<T> {
         checkBounds(index)
         var node = self.first
         for _ in 0..<index {
@@ -112,7 +119,7 @@ class OneWayLinkedList<T: Equatable> {
     }
     
     // 索引越界检查
-    private func checkBounds(_ index: Int) {
+    fileprivate func checkBounds(_ index: Int) {
         if index < 0 || index >= count {
             // 越界
             fatalError("索引有误, 已经越界")
@@ -120,6 +127,54 @@ class OneWayLinkedList<T: Equatable> {
     }
 }
 
+
+
+class OneWayCircularLinkedList<T: Equatable>: OneWayLinkedList<T> {
+    override func insert(_ item: T, _ index: Int) {
+        if index < 0 || index > count {
+            // 越界
+            fatalError("索引有误, 已经越界")
+        }
+        if index == 0 {
+            let prev = first
+            let newNode = Node(ele: item, next: prev)
+            if prev == nil {
+                // 只有一个元素
+                newNode.next = newNode
+            }
+            first = newNode
+        } else {
+            let prev = node(index - 1)
+            // 处理添加到最后一个位置
+            let fir = (index == count) ? first : prev.next
+            let newNode = Node(ele: item, next: fir)
+            prev.next = newNode
+        }
+        count += 1
+    }
+    
+    override func remove(_ index: Int) {
+        checkBounds(index)
+        if index == 0 {
+            let last = node(count - 1)
+            // 对最后一个元素的处理
+            first = (count - 1 == index) ? nil : first?.next
+            last.next = first
+        } else {
+            let noe = node(index - 1)
+            noe.next = noe.next?.next
+        }
+        count -= 1
+    }
+    
+    override func clear() {
+        let last = node(count - 1)
+        // 打破循环引用
+        last.next = nil
+        // 调用父类
+        super.clear()
+    }
+}
 
 /*
 var list = OneWayLinkedList(12)
@@ -130,9 +185,17 @@ list.insert(5, 1)
 print("索引是:\(list.indexOf(1))")
 print("元素是:\(list.get(1))")
 list.desc()
-*/
-/*
- 单向链表的结构图如下:
- 
  */
 
+/*
+var on = OneWayCircularLinkedList(1)
+on.append(9)
+on.append(7)
+on.desc()
+on.remove(2)
+on.desc()
+on.clear()
+on.append(3)
+on.append(5)
+on.append(6)
+*/

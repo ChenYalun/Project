@@ -9,9 +9,9 @@
 class TwoWayLinkedList<T: Equatable> {
     // 元素没有找到
     private let ELEMENT_NOT_FOUND = -1
-    private var first: Node<T>?
-    private var last: Node<T>?
-    private var count: Int = 0
+    fileprivate var first: Node<T>?
+    fileprivate var last: Node<T>?
+    fileprivate var count: Int = 0
     
     init(_ ele: T) {
         first = Node(ele: ele, prev: nil, next: nil)
@@ -20,7 +20,7 @@ class TwoWayLinkedList<T: Equatable> {
     }
     
     // 结点类
-    private class Node<T> {
+    fileprivate class Node<T> {
         var ele: T
         var prev: Node<T>?
         var next: Node<T>?
@@ -59,8 +59,6 @@ class TwoWayLinkedList<T: Equatable> {
             prev?.next = newNode
             if newNode.prev == nil {
                 first = newNode
-            } else if newNode.next == nil {
-                last = newNode
             }
         }
         count += 1
@@ -122,21 +120,31 @@ class TwoWayLinkedList<T: Equatable> {
     func desc() {
         var node = first
         var str = ""
-        while node != nil {
-            str += "\(node!.ele)"
-            // str += "\(Unmanaged.passUnretained(node! as AnyObject).toOpaque())"
-            node = node!.next
+        for idx in 0..<count {
+            if idx == 0 {
+                str += "first:\(node!.ele),"
+            }
+            if node!.next != nil {
+                str += " [\(node!.ele), \(node!.next!.ele)]"
+            } else {
+                str += " [\(node!.ele), nil]"
+            }
+            
             if node != nil {
                 str += ","
             }
+            
+            if idx == count - 1 {
+                str += " last:\(node!.ele)"
+            }
+            node = node!.next
+            
         }
-        
-        // print("first:\(Unmanaged.passUnretained(first as AnyObject).toOpaque())," + "last:\(Unmanaged.passUnretained(last as AnyObject).toOpaque())," + str)
-        print("first:\(first?.ele)," + "last:\(last?.ele)," + str)
+        print(str)
     }
     
     // 获取索引所在的结点
-    private func node(_ index: Int) -> Node<T> {
+    fileprivate func node(_ index: Int) -> Node<T> {
         checkBounds(index)
         if index < count >> 1 {
             // 在前半部分查找
@@ -156,13 +164,85 @@ class TwoWayLinkedList<T: Equatable> {
     }
     
     // 索引越界检查
-    private func checkBounds(_ index: Int) {
+    fileprivate func checkBounds(_ index: Int) {
         if index < 0 || index >= count {
             // 越界
             fatalError("索引有误, 已经越界")
         }
     }
 }
+
+
+
+class TwoWayCircularLinkedList<T: Equatable>: TwoWayLinkedList<T> {
+    override func insert(_ item: T, _ index: Int) {
+        if index < 0 || index > count {
+            // 越界
+            fatalError("索引有误, 已经越界")
+        }
+        if index == count {
+            let prev = last
+            let newNode = Node(ele: item, prev: prev, next: first)
+            last = newNode
+            prev?.next = newNode
+            if index == 0 {
+                first = last
+                last?.next = newNode
+            }
+            first?.prev = newNode
+        } else {
+            let next = node(index)
+            let prev = next.prev
+            let newNode = Node(ele: item, prev: prev, next: next)
+            next.prev = newNode
+            prev?.next = newNode
+            if index == 0 {
+                // 首位插入元素
+                first = newNode
+            }
+        }
+        count += 1
+    }
+    
+    override func remove(_ index: Int) {
+        checkBounds(index)
+        let old: Node? = node(index)
+        var prev = old!.prev
+        var next = old!.next
+        if count == 1 && index == 0 {
+            // 只有一个元素
+            prev = nil
+            next = nil
+            old?.next = nil
+            old?.prev = nil
+        }
+        if index == 0 {
+            first = next
+        }
+        if index == count - 1 {
+            last = prev
+        }
+        prev?.next = next
+        next?.prev = prev
+        count -= 1
+    }
+    
+    override func clear() {
+        // 打破循环引用
+        var first = self.first
+        for idx in 0..<count {
+            first?.prev = nil
+            first = first?.next
+            if idx == count - 1 {
+                first?.next = nil
+            }
+        }
+        self.first = nil
+        self.last = nil
+        count = 0
+    }
+}
+
 
 
 // 测试数据
@@ -177,7 +257,7 @@ class PersonNode: Equatable {
     }
     
     deinit {
-        print("已经销毁")
+        print("已经销毁, age: \(self.age)")
     }
 }
 
@@ -188,21 +268,48 @@ class PersonNode: Equatable {
  pList.insert(PersonNode(5), 1)
  pList.desc()
  pList.clear()
+ 
+ var pList = TwoWayLinkedList(1)
+ pList.append(2)
+ pList.append(3)
+ pList.insert(4, 0)
+ pList.remove(0)
+ pList.remove(0)
+ pList.remove(0)
+ pList.remove(3)
+ pList.desc()
+ pList.clear()
  */
 
 /*
-var list = TwoWayLinkedList(12)
-list.clear()
-list.append(2)
-list.append(4)
-list.insert(5, 1)
-list.insert(15, 0)
-list.append(42)
-list.insert(7, 5)
-list.insert(8, 5)
-list.desc()
-list.remove(0)
-print("索引是:\(list.indexOf(4))")
-print("元素是:\(list.get(1))")
-list.desc()
-*/
+ var s = TwoWayCircularLinkedList(8)
+ s.append(2)
+ s.desc()
+ s.clear()
+ s.append(3)
+ s.desc()
+ s.clear()
+ s.insert(0, 0)
+ s.insert(1, 1)
+ s.insert(3, 2)
+ s.insert(2, 1)
+ s.desc()
+ s.clear()
+ //s.append(PersonNode(3))
+ s.desc()
+ s.append(2)
+ s.insert(11, 1)
+ s.append(3)
+ s.append(4)
+ s.desc()
+ s.remove(2)
+ s.remove(0)
+ s.remove(0)
+ s.remove(0)
+ s.desc()
+ */
+
+
+
+
+
