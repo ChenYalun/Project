@@ -7,8 +7,8 @@
 //
 
 class ArrayList<T: Equatable> {
-    // 元素数量
-    private var count: Int = 0
+    // 元素数量(只读)
+    private(set) var count: Int = 0
     // 使用nil作为占位
     private var elements: [T?]
     // 默认10个元素

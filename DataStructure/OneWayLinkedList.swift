@@ -12,9 +12,18 @@ class OneWayLinkedList<T: Equatable> {
     fileprivate var first: Node<T>?
     fileprivate var count: Int = 0
     
-    init(_ firstEle: T) {
-        first = Node(ele: firstEle, next: nil)
-        count += 1
+    init(_ firstEle: T?) {
+        if firstEle == nil {
+            first = nil
+        } else {
+            first = Node(ele: firstEle!, next: nil)
+            count += 1
+        }
+    }
+    
+    // 便利构造
+    convenience init() {
+        self.init(nil)
     }
     
     // 结点类

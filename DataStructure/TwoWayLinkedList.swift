@@ -9,18 +9,28 @@
 class TwoWayLinkedList<T: Equatable> {
     // 元素没有找到
     private let ELEMENT_NOT_FOUND = -1
-    fileprivate var first: Node<T>?
-    fileprivate var last: Node<T>?
-    fileprivate var count: Int = 0
+    fileprivate(set) var first: Node<T>?
+    fileprivate(set) var last: Node<T>?
+    fileprivate(set) var count: Int = 0
     
-    init(_ ele: T) {
-        first = Node(ele: ele, prev: nil, next: nil)
-        last = first
-        count += 1
+    init(_ ele: T?) {
+        if ele == nil {
+            first = nil
+            last = nil
+        } else {
+            first = Node(ele: ele!, prev: nil, next: nil)
+            last = first
+            count += 1
+        }
+    }
+    
+    // 便利构造
+    convenience init() {
+        self.init(nil)
     }
     
     // 结点类
-    fileprivate class Node<T> {
+    class Node<T> {
         var ele: T
         var prev: Node<T>?
         var next: Node<T>?
@@ -70,7 +80,7 @@ class TwoWayLinkedList<T: Equatable> {
     }
     
     // 移除某索引的元素
-    func remove(_ index: Int) {
+    func remove(_ index: Int) -> T {
         checkBounds(index)
         let old = node(index)
         let prev = old.prev
@@ -87,6 +97,7 @@ class TwoWayLinkedList<T: Equatable> {
             prev?.next = next
         }
         count -= 1
+        return old.ele
     }
     
     // 获取某元素所在索引
@@ -114,6 +125,11 @@ class TwoWayLinkedList<T: Equatable> {
         self.first = nil
         self.last = nil
         count = 0
+    }
+    
+    // 是否为空
+    func isEmpty() -> Bool {
+        return count == 0
     }
     
     // 打印
@@ -204,17 +220,17 @@ class TwoWayCircularLinkedList<T: Equatable>: TwoWayLinkedList<T> {
         count += 1
     }
     
-    override func remove(_ index: Int) {
+     override func remove(_ index: Int) -> T {
         checkBounds(index)
-        let old: Node? = node(index)
-        var prev = old!.prev
-        var next = old!.next
+        let old: Node = node(index)
+        var prev = old.prev
+        var next = old.next
         if count == 1 && index == 0 {
             // 只有一个元素
             prev = nil
             next = nil
-            old?.next = nil
-            old?.prev = nil
+            old.next = nil
+            old.prev = nil
         }
         if index == 0 {
             first = next
@@ -225,6 +241,7 @@ class TwoWayCircularLinkedList<T: Equatable>: TwoWayLinkedList<T> {
         prev?.next = next
         next?.prev = prev
         count -= 1
+        return old.ele
     }
     
     override func clear() {
